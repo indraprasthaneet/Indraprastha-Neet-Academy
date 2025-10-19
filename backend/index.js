@@ -23,7 +23,7 @@ const app = express();
 
 // ✅ Define allowed origins
 const allowedOrigins = [
-  "https://indraprashta-demo-qqrr.vercel.app",
+  "https://indraprastha-neet-academy.vercel.app",
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:5175"
