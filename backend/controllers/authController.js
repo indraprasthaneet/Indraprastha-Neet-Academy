@@ -1,15 +1,15 @@
-import SignupOtp from "../models/signupOtpModel.js"
-import { genToken } from "../configs/token.js"
-import validator from "validator"
-import bcrypt from "bcryptjs"
-import User from "../models/userModel.js"
-import sendMail from "../configs/Mail.js"
+import SignupOtp from "../models/signupOtpModel.js";
+import { genToken } from "../configs/token.js";
+import validator from "validator";
+import bcrypt from "bcryptjs";
+import User from "../models/userModel.js";
+import sendMail from "../configs/Mail.js";
 
 // Define SECURE, CROSS-SITE cookie options once
 const COOKIE_OPTIONS = {
     httpOnly: true,
-    secure: true,   // 🚀 FIX 1: MUST be true for cross-site (Samesite=None) and for HTTPS (Render/Vercel)
-    sameSite: "None", // 🚀 FIX 2: MUST be "None" to allow Vercel domain to send cookie to Render domain
+    secure: true,   
+    sameSite: "None", // FIX: Must be "None" for cross-site cookie transfer (Vercel <-> Render)
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
 };
 
@@ -18,8 +18,7 @@ const COOKIE_OPTIONS = {
 export const requestSignupOtp = async (req, res) => {
     try {
         let { name, email, password, role, inviteCode } = req.body;
-        // NOTE: User model needs to be imported or available here. Assuming it is.
-
+        
         let existUser = await User.findOne({ email });
         if (existUser) {
             return res.status(400).json({ message: "Email already exists" });
@@ -30,12 +29,22 @@ export const requestSignupOtp = async (req, res) => {
         if (password.length < 8) {
             return res.status(400).json({ message: "Please enter a Strong Password" });
         }
-        // ... (educator invite code logic remains the same) ...
-
+        
+        // Check educator invite code
+        if (role === "educator") {
+            const expectedInviteCode = process.env.TEACHER_SECRET_CODE;
+            if (!expectedInviteCode) {
+                return res.status(500).json({ message: "Teacher signup is not properly configured" });
+            }
+            if (inviteCode !== expectedInviteCode) {
+                return res.status(403).json({ message: "Not authorized to signup as teacher" });
+            }
+        }
+        
         await SignupOtp.deleteMany({ email });
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpires = Date.now() + 5 * 60 * 1000;
-
+        
         const hashPassword = await bcrypt.hash(password, 10);
         await SignupOtp.create({ name, email, password: hashPassword, role, inviteCode, otp, otpExpires });
         await sendMail(email, otp);
@@ -68,7 +77,7 @@ export const verifySignupOtp = async (req, res) => {
         
         let token = await genToken(user._id, user.role);
 
-        // ✅ FIX APPLIED HERE
+        // FIX APPLIED
         res.cookie("token", token, COOKIE_OPTIONS); 
 
         await SignupOtp.deleteOne({ email });
@@ -91,22 +100,44 @@ export const verifySignupOtp = async (req, res) => {
 export const signUp = async (req, res) => {
     try {
         let { name, email, password, role, inviteCode } = req.body
-        // ... (validation logic remains the same) ...
         
-        // Ensure role is handled
+        let existUser = await User.findOne({ email })
+        if (existUser) {
+            return res.status(400).json({ message: "email already exist" })
+        }
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({ message: "Please enter valid Email" })
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ message: "Please enter a Strong Password" })
+        }
+
+        // Check if role is educator and validate invite code
         if (role === "educator") {
              const expectedInviteCode = process.env.TEACHER_SECRET_CODE
+             if (!expectedInviteCode) {
+                return res.status(500).json({ message: "Teacher signup is not properly configured" });
+             }
              if (inviteCode !== expectedInviteCode) {
                  return res.status(403).json({ message: "Not authorized to signup as teacher" })
              }
         }
         
+        // Role validation and default
+        const validRoles = ["student", "educator"]
+        if (role && !validRoles.includes(role)) {
+            return res.status(400).json({ message: "Invalid role specified" })
+        }
+        if (!role) {
+            role = "student"
+        }
+
         let hashPassword = await bcrypt.hash(password, 10)
         let user = await User.create({ name, email, password: hashPassword, role });
         
         let token = await genToken(user._id, user.role);
         
-        // ✅ FIX APPLIED HERE
+        // FIX APPLIED
         res.cookie("token", token, COOKIE_OPTIONS); 
         
         return res.status(201).json({
@@ -140,7 +171,7 @@ export const login = async (req, res) => {
         
         let token = await genToken(user._id, user.role);
 
-        // ✅ FIX APPLIED HERE
+        // FIX APPLIED
         res.cookie("token", token, COOKIE_OPTIONS);
 
         return res.status(200).json({
@@ -181,7 +212,7 @@ export const googleSignup = async (req, res) => {
 
         const token = await genToken(user._id, user.role);
 
-        // ✅ FIX APPLIED HERE
+        // FIX APPLIED
         res.cookie("token", token, COOKIE_OPTIONS);
 
         return res.status(200).json({
@@ -197,4 +228,100 @@ export const googleSignup = async (req, res) => {
     }
 };
 
-// ... (sendOtp, checkAuth, verifyOtp, resetPassword functions remain the same as they don't set cookies) ...
+// =====================================================================================================================
+// Send OTP for password reset
+export const sendOtp = async (req, res) => {
+    try {
+        const { email } = req.body
+        const user = await User.findOne({ email })
+        if (!user) {
+            return res.status(404).json({ message: "User not found" })
+        }
+        const otp = Math.floor(1000 + Math.random() * 9000).toString()
+
+        user.resetOtp = otp,
+        user.otpExpires = Date.now() + 5 * 60 * 1000,
+        user.isOtpVerifed = false
+
+        await user.save()
+        await sendMail(email, otp)
+        return res.status(200).json({ message: "Email Successfully send" })
+    } catch (error) {
+        return res.status(500).json({ message: `send otp error ${error.message}` })
+    }
+}
+
+// =====================================================================================================================
+// Verify OTP for password reset
+export const verifyOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body
+        const user = await User.findOne({ email })
+        if (!user || user.resetOtp != otp || user.otpExpires < Date.now()) {
+            return res.status(400).json({ message: "Invalid OTP" })
+        }
+        user.isOtpVerifed = true
+        user.resetOtp = undefined
+        user.otpExpires = undefined
+        await user.save()
+        return res.status(200).json({ message: "OTP varified " })
+
+    } catch (error) {
+        return res.status(500).json({ message: `Varify otp error ${error.message}` })
+    }
+}
+
+// =====================================================================================================================
+// Reset Password
+export const resetPassword = async (req, res) => {
+    try {
+        const { email, password } = req.body
+        const user = await User.findOne({ email })
+        if (!user || !user.isOtpVerifed) {
+            return res.status(404).json({ message: "OTP verfication required" })
+        }
+
+        const hashPassword = await bcrypt.hash(password, 10)
+        user.password = hashPassword
+        user.isOtpVerifed = false
+        await user.save()
+        return res.status(200).json({ message: "Password Reset Successfully" })
+    } catch (error) {
+        return res.status(500).json({ message: `Reset Password error ${error.message}` })
+    }
+}
+
+// =====================================================================================================================
+// Check Auth Status (The function that Render couldn't find)
+export const checkAuth = async (req, res) => {
+    try {
+        // If the middleware passed, req.userId should be available (assuming your middleware sets it)
+        const user = await User.findById(req.userId).select("-password"); 
+        
+        if (!user) {
+            // Token was valid but user was deleted
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        
+        return res.status(200).json({
+            success: true,
+            authenticated: true,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                photoUrl: user.photoUrl
+            }
+        });
+    } catch (error) {
+        console.error("checkAuth error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Authentication check failed",
+            error: error.message
+        });
+    }
+};
+
+// =====================================================================================================================
