@@ -1,20 +1,24 @@
-import SignupOtp from "../models/signupOtpModel.js";
-import { genToken } from "../configs/token.js";
-import validator from "validator";
-import bcrypt from "bcryptjs";
-import User from "../models/userModel.js";
-import sendMail from "../configs/Mail.js";
+import SignupOtp from "../models/signupOtpModel.js"
+import { genToken } from "../configs/token.js"
+import validator from "validator"
+import bcrypt from "bcryptjs"
+import User from "../models/userModel.js"
+import sendMail from "../configs/Mail.js" 
+// Assuming sendMail now accepts (to, otp, purpose)
 
-// Define SECURE, CROSS-SITE cookie options once
+// =============================================================================
+// FIX: Define SECURE, CROSS-SITE cookie options once
+// This is required for Vercel (HTTPS) frontend to send cookies to Render (API)
 const COOKIE_OPTIONS = {
     httpOnly: true,
     secure: true,   
-    sameSite: "None", // FIX: Must be "None" for cross-site cookie transfer (Vercel <-> Render)
+    sameSite: "None", 
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
 };
+// =============================================================================
 
-// =====================================================================================================================
-// Request OTP for signup
+// ---------------------------------------------------------------------------------------------------------------------
+// Request OTP for signup (Verification Email)
 export const requestSignupOtp = async (req, res) => {
     try {
         let { name, email, password, role, inviteCode } = req.body;
@@ -29,7 +33,6 @@ export const requestSignupOtp = async (req, res) => {
         if (password.length < 8) {
             return res.status(400).json({ message: "Please enter a Strong Password" });
         }
-        
         // Check educator invite code
         if (role === "educator") {
             const expectedInviteCode = process.env.TEACHER_SECRET_CODE;
@@ -47,7 +50,9 @@ export const requestSignupOtp = async (req, res) => {
         
         const hashPassword = await bcrypt.hash(password, 10);
         await SignupOtp.create({ name, email, password: hashPassword, role, inviteCode, otp, otpExpires });
-        await sendMail(email, otp);
+        
+        // 🚀 FIX: Pass 'verification' purpose
+        await sendMail(email, otp, 'verification'); 
 
         return res.status(200).json({ message: "OTP sent to email" });
     } catch (error) {
@@ -56,7 +61,7 @@ export const requestSignupOtp = async (req, res) => {
     }
 };
 
-// =====================================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------
 // Verify OTP and create user
 export const verifySignupOtp = async (req, res) => {
     try {
@@ -77,7 +82,7 @@ export const verifySignupOtp = async (req, res) => {
         
         let token = await genToken(user._id, user.role);
 
-        // FIX APPLIED
+        // ✅ FIX: Use COOKIE_OPTIONS for cross-site cookie
         res.cookie("token", token, COOKIE_OPTIONS); 
 
         await SignupOtp.deleteOne({ email });
@@ -95,7 +100,7 @@ export const verifySignupOtp = async (req, res) => {
     }
 };
 
-// =====================================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------
 // Standard Sign Up (Non-OTP)
 export const signUp = async (req, res) => {
     try {
@@ -137,7 +142,7 @@ export const signUp = async (req, res) => {
         
         let token = await genToken(user._id, user.role);
         
-        // FIX APPLIED
+        // ✅ FIX: Use COOKIE_OPTIONS for cross-site cookie
         res.cookie("token", token, COOKIE_OPTIONS); 
         
         return res.status(201).json({
@@ -153,7 +158,7 @@ export const signUp = async (req, res) => {
     }
 }
 
-// =====================================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------
 // Standard Login
 export const login = async (req, res) => {
     try {
@@ -161,6 +166,7 @@ export const login = async (req, res) => {
         let user = await User.findOne({ email });
         
         if (!user || !user.password) {
+            // Note: Updated message for clarity
             return res.status(400).json({ message: "Invalid credentials or use Google login." });
         }
         
@@ -171,7 +177,7 @@ export const login = async (req, res) => {
         
         let token = await genToken(user._id, user.role);
 
-        // FIX APPLIED
+        // ✅ FIX: Use COOKIE_OPTIONS for cross-site cookie
         res.cookie("token", token, COOKIE_OPTIONS);
 
         return res.status(200).json({
@@ -187,19 +193,19 @@ export const login = async (req, res) => {
     }
 }
 
-// =====================================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------
 // Log Out
 export const logOut = async (req, res) => {
     try {
-        // Clearing a cross-site cookie requires the same options
-        res.clearCookie("token", COOKIE_OPTIONS);
+        // ✅ FIX: Clearing a cross-site cookie requires the same options
+        res.clearCookie("token", COOKIE_OPTIONS); 
         return res.status(200).json({ message: "logOut Successfully" });
     } catch (error) {
         return res.status(500).json({ message: `logout Error ${error.message}` });
     }
 }
 
-// =====================================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------
 // Google Signup/Login
 export const googleSignup = async (req, res) => {
     try {
@@ -212,7 +218,7 @@ export const googleSignup = async (req, res) => {
 
         const token = await genToken(user._id, user.role);
 
-        // FIX APPLIED
+        // ✅ FIX: Use COOKIE_OPTIONS for cross-site cookie
         res.cookie("token", token, COOKIE_OPTIONS);
 
         return res.status(200).json({
@@ -228,8 +234,8 @@ export const googleSignup = async (req, res) => {
     }
 };
 
-// =====================================================================================================================
-// Send OTP for password reset
+// ---------------------------------------------------------------------------------------------------------------------
+// Send OTP for password reset (Reset Email)
 export const sendOtp = async (req, res) => {
     try {
         const { email } = req.body
@@ -244,14 +250,16 @@ export const sendOtp = async (req, res) => {
         user.isOtpVerifed = false
 
         await user.save()
-        await sendMail(email, otp)
+        // 🚀 FIX: Pass 'reset' purpose
+        await sendMail(email, otp, 'reset') 
+        
         return res.status(200).json({ message: "Email Successfully send" })
     } catch (error) {
         return res.status(500).json({ message: `send otp error ${error.message}` })
     }
 }
 
-// =====================================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------
 // Verify OTP for password reset
 export const verifyOtp = async (req, res) => {
     try {
@@ -271,7 +279,7 @@ export const verifyOtp = async (req, res) => {
     }
 }
 
-// =====================================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------
 // Reset Password
 export const resetPassword = async (req, res) => {
     try {
@@ -291,15 +299,14 @@ export const resetPassword = async (req, res) => {
     }
 }
 
-// =====================================================================================================================
-// Check Auth Status (The function that Render couldn't find)
+// ---------------------------------------------------------------------------------------------------------------------
+// Check Auth Status (The function that Render previously failed to find)
 export const checkAuth = async (req, res) => {
     try {
-        // If the middleware passed, req.userId should be available (assuming your middleware sets it)
+        // req.userId is assumed to be set by the authentication middleware
         const user = await User.findById(req.userId).select("-password"); 
         
         if (!user) {
-            // Token was valid but user was deleted
             return res.status(404).json({ success: false, message: "User not found" });
         }
         
@@ -323,5 +330,3 @@ export const checkAuth = async (req, res) => {
         });
     }
 };
-
-// =====================================================================================================================
