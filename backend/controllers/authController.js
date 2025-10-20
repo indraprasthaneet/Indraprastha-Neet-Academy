@@ -54,7 +54,7 @@ export const requestSignupOtp = async (req, res) => {
         // 🚀 FIX: Pass 'verification' purpose
         await sendMail(email, otp, 'verification'); 
 
-        return res.status(200).json({ message: "OTP sent to email" });
+        return res.status(200).json({ message: "OTP sent to email,Please check spam folder" });
     } catch (error) {
         console.log("requestSignupOtp error", error);
         return res.status(500).json({ message: `Signup OTP Error: ${error.message}` });
@@ -253,7 +253,7 @@ export const sendOtp = async (req, res) => {
         // 🚀 FIX: Pass 'reset' purpose
         await sendMail(email, otp, 'reset') 
         
-        return res.status(200).json({ message: "Email Successfully send" })
+        return res.status(200).json({ message: "Email Successfully send,Please check spam folder" })
     } catch (error) {
         return res.status(500).json({ message: `send otp error ${error.message}` })
     }
