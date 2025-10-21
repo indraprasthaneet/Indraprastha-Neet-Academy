@@ -193,7 +193,7 @@ function QuestionBank() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+         <div className="flex items-center gap-2 text-md text-gray-400 mb-6 ml-20 md:ml-130">
             <button 
               onClick={() => navigate('/question-bank')}
               className="hover:text-[#FFD700] transition-colors"
