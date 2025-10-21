@@ -265,7 +265,7 @@ function PYQBundle() {
                 <tr className="bg-[#2a2a2a] border-b border-gray-600">
                   <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">SUBJECT</th>
                   <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">CHAPTER</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">NOTES</th>
+                   <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">PYQ'S</th>
                 </tr>
               </thead>
               <tbody>
@@ -294,7 +294,7 @@ function PYQBundle() {
                             className="text-[#4ade80] hover:text-[#4ade80]/80 transition-colors font-medium hover:underline flex items-center gap-1"
                           >
                             <FiFileText className="w-4 h-4" />
-                            View Notes
+                             View Questions
                           </button>
                         )}
                       </div>
