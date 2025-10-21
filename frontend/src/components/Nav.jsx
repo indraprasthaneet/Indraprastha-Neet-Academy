@@ -8,6 +8,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUserData } from '../redux/userSlice';
+import newLogo from "../assets/newLogo.jpg"
 
 function Nav() {
   const [showHam, setShowHam] = useState(false);
@@ -36,7 +37,7 @@ function Nav() {
         {/* Logo */}
         <div className='lg:w-[20%] w-[40%] lg:pl-[75px] ml-10 md:ml-4 relative'>
           <img
-            src={companylogo}
+            src={newLogo}
             className='w-[50px] h-[50px] rounded-full border-2 border-white cursor-pointer object-cover'
             onClick={() => navigate("/")}
             alt="Company Logo"
