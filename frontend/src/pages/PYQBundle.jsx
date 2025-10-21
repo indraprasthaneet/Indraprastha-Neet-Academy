@@ -215,7 +215,7 @@ function PYQBundle() {
         <div
           className="mb-8"
         >
-          <div className="flex items-center gap-2 text-sm text-gray-400 mb-4 ml-15 md:ml-0">
+          <div className="flex items-center gap-2 text-md text-gray-400 mb-6 ml-20 md:ml-130">
             <button 
               onClick={() => navigate('/pyq-bundles')}
               className="hover:text-[#FFD700] transition-colors"
