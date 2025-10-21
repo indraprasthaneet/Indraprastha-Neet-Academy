@@ -273,23 +273,24 @@ const TeacherNotepad = () => {
   return (
     <div className="min-h-screen bg-[#121212] ml-0 lg:ml-20 transition-all duration-300">
       {/* Header */}
-      <div className="bg-[#1e1e1e] border-b border-gray-700 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="bg-[#1e1e1e] border-b border-gray-700 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4 pl-14 md:pl-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 min-w-0">
               <button
                 onClick={handleBack}
                 className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+                aria-label="Back to PYQ Bundles"
               >
-                <FiArrowLeft className="w-5 h-5" />
-                Back to PYQ Bundles
+                <FiArrowLeft className="w-5 h-5 flex-shrink-0" />
+                <span className="hidden sm:inline">Back</span>
               </button>
-              <div className="h-6 w-px bg-gray-600"></div>
-              <div className="flex items-center gap-3">
-                <FiEdit3 className="w-6 h-6 text-[#FFD700]" />
-                <div>
-                  <h1 className="text-xl font-bold text-white">Teacher Notepad</h1>
-                  <p className="text-sm text-gray-400">
+              <div className="h-6 w-px bg-gray-600 hidden sm:block"></div>
+              <div className="flex items-center gap-3 min-w-0">
+                
+                <div className="truncate min-w-0">
+                  <h1 className="text-lg md:text-xl font-bold text-white truncate">Teacher Notepad</h1>
+                  <p className="text-xs md:text-sm text-gray-400 truncate">
                     {bundleInfo && `${bundleInfo.classNumber} • ${bundleInfo.subject} • ${bundleInfo.formattedChapter}`}
                   </p>
                 </div>
@@ -298,9 +299,9 @@ const TeacherNotepad = () => {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2 bg-[#FFD700] text-black font-medium rounded-lg hover:bg-[#ffed4e] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 md:px-6 py-2 bg-[#FFD700] text-black font-medium rounded-lg hover:bg-[#ffed4e] transition-colors disabled:opacity-50 whitespace-nowrap"
             >
-              <FiSave className="w-4 h-4" />
+              <FiSave className="w-4 h-4 flex-shrink-0" />
               {saving ? 'Saving...' : 'Save Notes'}
             </button>
           </div>
@@ -308,10 +309,10 @@ const TeacherNotepad = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-[#1e1e1e] rounded-xl border border-gray-700 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
+        <div className="bg-[#1e1e1e] rounded-xl border border-gray-700 overflow-hidden shadow-lg">
           {/* Title Input */}
-          <div className="p-6 border-b border-gray-700">
+          <div className="p-4 sm:p-6 border-b border-gray-700">
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Note Title
             </label>
@@ -325,11 +326,11 @@ const TeacherNotepad = () => {
           </div>
 
           {/* PDF Upload Section */}
-          <div className="p-6 border-b border-gray-700">
+          <div className="p-4 sm:p-6 border-b border-gray-700">
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Upload PDF (Optional)
             </label>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
               <input
                 type="file"
                 accept=".pdf"
@@ -348,22 +349,22 @@ const TeacherNotepad = () => {
               >
                 {pdfUploading ? 'Uploading PDF...' : 'Choose PDF File'}
               </label>
-              <span className="text-sm text-gray-400">
+              <span className="text-xs sm:text-sm text-gray-400 mt-2 sm:mt-0">
                 Select a PDF file to automatically extract text and create notes (5MB max)
               </span>
             </div>
           </div>
 
           {/* Rich Text Editor */}
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
               <label className="block text-sm font-medium text-gray-300">
                 Notes Content
               </label>
               <div className="flex items-center gap-2">
                 <label className="flex items-center gap-2 px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-white cursor-pointer hover:bg-[#3a3a3a] transition-colors">
-                  <FiImage className="w-4 h-4" />
-                  {uploadingImage ? 'Uploading...' : 'Add Image'}
+                  <FiImage className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{uploadingImage ? 'Uploading...' : 'Add Image'}</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -378,19 +379,22 @@ const TeacherNotepad = () => {
             {/* Images Display */}
             {images.length > 0 && (
               <div className="mb-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {images.map((image, index) => (
                     <div key={index} className="relative group">
-                      <img
-                        src={image}
-                        alt={`Note image ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg border border-gray-600"
-                      />
+                      <div className="aspect-[16/10] w-full overflow-hidden rounded-lg bg-gray-800 border border-gray-600">
+                        <img
+                          src={image}
+                          alt={`Note image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                       <button
                         onClick={() => removeImage(index)}
                         className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Remove image"
                       >
-                        <FiUpload className="w-3 h-3 rotate-45" />
+                        <FiUpload className="w-3 h-3 rotate-45 flex-shrink-0" />
                       </button>
                     </div>
                   ))}
@@ -403,21 +407,21 @@ const TeacherNotepad = () => {
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full h-96 p-4 border-none outline-none text-gray-800 resize-none"
+                className="w-full min-h-[220px] sm:min-h-[320px] md:min-h-[400px] max-h-[60vh] p-4 border-none outline-none text-gray-800 resize-none"
                 placeholder="Start writing your notes here... You can include text, images, and formatting."
-                style={{ minHeight: '400px' }}
+                style={{ minHeight: '220px' }}
               />
             </div>
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-gray-700 bg-[#2a2a2a]">
-            <div className="flex items-center justify-between text-sm text-gray-400">
-              <div className="flex items-center gap-4">
+          <div className="p-4 sm:p-6 border-t border-gray-700 bg-[#2a2a2a]">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between text-xs sm:text-sm text-gray-400 gap-2">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span>Rich text editor with image support</span>
-                <span>•</span>
+                <span className="opacity-60">•</span>
                 <span>Auto-save functionality</span>
-                <span>•</span>
+                <span className="opacity-60">•</span>
                 <span>{images.length} image(s) attached</span>
               </div>
               <div className="flex items-center gap-2">
