@@ -47,14 +47,7 @@ function Nav() {
         {/* Right Controls */}
         <div className='flex items-center justify-end gap-3'>
           <div className='flex items-center gap-3'>
-            {userData?.role === "educator" && (
-              <div
-                className='hidden lg:flex px-[20px] py-[10px] border-2 border-white text-white rounded-[10px] text-[16px] font-light cursor-pointer bg-[#000000d5]'
-                onClick={() => navigate("/dashboard")}
-              >
-                Dashboard
-              </div>
-            )}
+            
 
             {!userData ? (
               <span
