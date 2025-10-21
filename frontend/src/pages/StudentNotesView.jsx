@@ -143,7 +143,8 @@ const StudentNotesView = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBack}
-                className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+                className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors ml-10 mt-2"
+
               >
                 <FiArrowLeft className="w-5 h-5 flex-shrink-0" />
                 Back to PYQ Bundles
